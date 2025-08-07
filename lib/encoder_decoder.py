@@ -118,7 +118,8 @@ class GRU_unit(nn.Module):
 	def forward(self, y_mean, y_std, x, masked_update = True):
 		# if not self.gru_aug:
 		y_concat = torch.cat([y_mean, y_std, x], -1) 
-
+		# print ('y_mean', y_mean.shape, 'y_std', y_std.shape, 'x', x.shape)
+		# print ('y_concat',y_concat.shape)
 		update_gate = self.update_gate(y_concat)
 		reset_gate = self.reset_gate(y_concat)
 		concat = torch.cat([y_mean * reset_gate, y_std * reset_gate, x], -1)

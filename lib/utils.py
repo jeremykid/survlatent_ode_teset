@@ -363,9 +363,11 @@ def normalize_masked_data(data, mask, att_min, att_max, extra = False, scale_par
 
 		return data_norm, att_min, att_max
 	else:
-		if (att_max != 0.).all():
+		if (att_max != 0.).all():            
 			try:
-				data_norm = (data - att_min.to(device)) / (att_max.to(device) - att_min.to(device)) * scale_param #- att_min.to(device)
+				range_ = (att_max.to(device) - att_min.to(device)).clamp(min=1e-6)
+				data_norm = (data - att_min.to(device)) / range_ * scale_param
+				# data_norm = (data - att_min.to(device)) / (att_max.to(device) - att_min.to(device)) * scale_param #- att_min.to(device)
 			except:
 				data_norm = (data - torch.tensor(att_min).to(device)) / (torch.tensor(att_max).to(device) - torch.tensor(att_min).to(device)) * scale_param #- att_min.to(device)	
 		else:
@@ -1608,6 +1610,8 @@ def variable_time_collate_fn_survival(batch, device = torch.device("cpu"), data_
 	if torch.max(combined_tt) != 0.:
 		# normalize combined tt
 		combined_tt_normalized = (combined_tt - torch.min(combined_tt)) / torch.max(combined_tt)
+	else:
+		combined_tt_normalized = torch.zeros_like(combined_tt)
 	total_time_to_pred = torch.arange(0, max_pred_window, 1).to(device)
 	total_time_to_pred_normalized = (total_time_to_pred - torch.min(total_time_to_pred)) / (torch.max(total_time_to_pred) - torch.min(total_time_to_pred))
 	
@@ -1758,6 +1762,7 @@ def train_surv_model(model, data_obj, params_dic, device = None, surv_est = None
 		batch_dict = get_next_batch(data_obj["train_dataloader"])
 		batch_dict = remove_timepoints_wo_obs(batch_dict)
 		train_res = model.compute_all_losses(batch_dict, kl_coef = kl_coef, surv_est = surv_est, survival_loss_scale = survival_loss_scale_actual) # survival set to true for time-to-event esimtation
+		# print ('train_res', train_res)
 		train_res["loss"].backward()
 		optimizer.step()
 

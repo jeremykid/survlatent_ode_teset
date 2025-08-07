@@ -153,7 +153,6 @@ def compute_masked_likelihood(mu, data, mask, likelihood_func):
 				log_prob = likelihood_func(mu_masked, data_masked, indices = (i,k,j))
 				res.append(log_prob)
 	# shape: [n_traj*n_traj_samples, 1]
-
 	res = torch.stack(res, 0).to(utils.get_device(data))
 	res = res.reshape((n_traj_samples, n_traj, n_dims))
 	# Take mean over the number of dimensions
